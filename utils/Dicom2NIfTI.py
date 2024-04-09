@@ -1,5 +1,4 @@
 import os
-import SimpleITK as sitk
 import itk
 
 

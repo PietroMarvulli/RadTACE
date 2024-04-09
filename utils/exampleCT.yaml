@@ -14,7 +14,7 @@ imageType:
   Wavelet: {}
 
 featureClass:
-  # redundant Compactness 1, Compactness 2 an Spherical Disproportion features are disabled by default, they can be
+  # redundant Compactness 1, Compactness 2 a Spherical Disproportion features are disabled by default, they can be
   # enabled by specifying individual feature names (as is done for glcm) and including them in the list.
   shape:
     - 'MeshVolume'
@@ -107,4 +107,4 @@ setting:
   # Misc:
   # default label value. Labels can also be defined in the call to featureextractor.execute, as a commandline argument,
   # or in a column "Label" in the input csv (batchprocessing)
-  label: 1
+  label: 2

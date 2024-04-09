@@ -1,0 +1,3 @@
+Image,Mask
+D:\dataset_TACE_NIfTI\HCC-TACE-SEG\HCC_001\CT-CAP_WWO_CON_(30_11_1999)\3_C-A-P_acquisitionNumber_2.nii.gz,D:\dataset_TACE_NIfTI\HCC-TACE-SEG\HCC_001\CT-CAP_WWO_CON_(30_11_1999)\Segmentation.nrrd
+D:\dataset_TACE_NIfTI\HCC-TACE-SEG\HCC_002\ABDPELVIS_(26_09_1997)\4_Recon_2_LIVER_3_PHASE_(AP)_acquisitionNumber_2_1.nii.gz,D:\dataset_TACE_NIfTI\HCC-TACE-SEG\HCC_002\ABDPELVIS_(26_09_1997)\Segmentation.nrrd
