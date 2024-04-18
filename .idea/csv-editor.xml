@@ -3,38 +3,17 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
-        <entry key="D:\dataset_TACE_NIfTI\RadiomicsFeatures\image-mask_SINGLE.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value=":" />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\image-mask.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value=":" />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\radfeature_TACE_MULTI.csv">
+        <entry key="\RadFeatures_1.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
             </Attribute>
           </value>
         </entry>
-        <entry key="\radfeature_TACE_SINGLE.csv">
+        <entry key="\RadFeatures_2.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\utils\image-mask_SINGLE-test.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value=":" />
             </Attribute>
           </value>
         </entry>
