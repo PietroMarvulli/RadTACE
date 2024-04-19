@@ -3,14 +3,21 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
-        <entry key="\RadFeatures_1.csv">
+        <entry key="C:\Users\marvu\Downloads\clinical_data.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
             </Attribute>
           </value>
         </entry>
-        <entry key="\RadFeatures_2.csv">
+        <entry key="\RadFeatures_Liver.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\RadFeatures_Vein.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
@@ -18,6 +25,13 @@
           </value>
         </entry>
         <entry key="\utils\image-mask_SINGLE.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value=":" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\utils\image-mask_SINGLE_2.csv">
           <value>
             <Attribute>
               <option name="separator" value=":" />
