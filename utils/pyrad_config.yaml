@@ -68,4 +68,4 @@ setting:
   # Misc:
   # default label value. Labels can also be defined in the call to featureextractor.execute, as a commandline argument,
   # or in a column "Label" in the input csv (batchprocessing)
-  label: 3
+  label: 2

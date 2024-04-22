@@ -26,4 +26,4 @@ for patient_folder in os.listdir(main_dir):
 
 df = pd.DataFrame({'Image': image_paths, 'Mask': mask_paths})
 df.to_csv(r'D:\dataset_TACE_NIfTI\RadiomicsFeatures\image-mask_SINGLE.csv', index=False)
-df.to_csv(r'C:\Users\marvu\Desktop\GitHub\RadTACE\utils\image-mask_SINGLE.csv', index=False)
+df.to_csv(r'C:\Users\marvu\Desktop\GitHub\RadTACE\file\image-mask_SINGLE.csv', index=False)
