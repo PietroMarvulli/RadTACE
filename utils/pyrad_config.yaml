@@ -30,7 +30,7 @@ setting:
   # most likely not needed, CT gray values reflect absolute world values (HU) and should be comparable between scanners.
   # If analyzing using different scanners / vendors, check if the extracted features are correlated to the scanner used.
   # If so, consider enabling normalization by uncommenting settings below:
-  #normalize: true
+  normalize: true
   #normalizeScale: 500  # This allows you to use more or less the same bin width.
 
   # Resampling:
