@@ -1,4 +1,5 @@
 import os
+from colorama import Fore, Back, Style
 import numpy as np
 import pandas as pd
 import random
@@ -12,7 +13,14 @@ import warnings
 from sklearn.model_selection import GridSearchCV, KFold
 from sklearn.exceptions import FitFailedWarning
 from sklearn.pipeline import make_pipeline
-
+def File_Exist(filename):
+    for folder_name, _, file_list in os.walk(r'.\file'):
+        if filename in file_list:
+            print(Back.GREEN + f"File '{filename}' found in folder: {folder_name}"+Style.RESET_ALL)
+            return True
+        else:
+            print(f"File '{filename}' not found in the project.")
+            return False
 def PreprocessRadFeatures(radPath,clinicalPath):
     rad_features = pd.read_csv(radPath)
     cols_to_drop = [col for col in rad_features.columns if 'diagnostic' in col]
@@ -50,7 +58,6 @@ def PreprocessRadFeatures(radPath,clinicalPath):
     print('Finished Preprocess of ', radPath)
     return rad_features
 def PreprocessClinicalFeatures(csvPath):
-
     clinical_features = pd.read_csv(csvPath)
     clinical_features['target'] = (clinical_features['TTP'] > 14).astype(float)
     clinical_features = clinical_features.drop(columns=['age','AFP'])
@@ -97,7 +104,7 @@ def EncodeDF(df):
             try:
                 values = np.sort(values)
             except:
-                print('Array not sorted for feature:',feature)
+                print(Back.RED+'Array not sorted for feature:',feature,Style.RESET_ALL)
             replace = range(0,values.size)
             dict_replace = dict(zip(values,replace))
             df[feature] = df[feature].replace(dict_replace)
@@ -118,14 +125,6 @@ def ScaleDF(df, features = None):
     else:
         df[features] = scaler.fit_transform(df[features])
     return df
-def File_Exist(filename):
-    for folder_name, _, file_list in os.walk(r'.\file'):
-        if filename in file_list:
-            print(f"File '{filename}' found in folder: {folder_name}")
-            return True
-        else:
-            print(f"File '{filename}' not found in the project.")
-            return False
 def IDMerge(df1,df2):
     id_c = df1['ID']
     id_r = df2['ID']
@@ -133,58 +132,6 @@ def IDMerge(df1,df2):
     df1 = df1[df1['ID'].isin(ids)]
     df2 = df2[df2['ID'].isin(ids)]
     return df1,df2
-def LassoAnalysis(df):
-    x = df.iloc[:, 1:-1]
-    y = df.iloc[:, -1]
-    x_train, x_test, y_train, y_test = train_test_split(x,y, test_size=0.3, random_state=42)
-    lasso = LassoCV(cv=10, max_iter=10000, random_state = 42)
-    lasso.fit(x_train,y_train)
-    best_alpha = lasso.alpha_
-    lasso_best = Lasso(alpha=best_alpha)
-    lasso_best.fit(x_train, y_train)
-    formula = list(zip(lasso_best.coef_,list(x.columns)))
-    for el in formula:
-        if el[0] != 0.0:
-            print(el)
-    print(lasso_best.intercept_)
-def LassoAnalysis_TD(x,y):
-    coxnet_pipe = make_pipeline(CoxnetSurvivalAnalysis(l1_ratio=0.9, alpha_min_ratio=0.01, max_iter=100))
-    warnings.simplefilter("ignore", UserWarning)
-    warnings.simplefilter("ignore", FitFailedWarning)
-    coxnet_pipe.fit(x, y)
-    estimated_alphas = coxnet_pipe.named_steps["coxnetsurvivalanalysis"].alphas_
-    cv = KFold(n_splits=10, shuffle=True, random_state=42)
-    gcv = GridSearchCV(
-        make_pipeline(StandardScaler(), CoxnetSurvivalAnalysis(l1_ratio=0.9)),
-        param_grid={"coxnetsurvivalanalysis__alphas": [[v] for v in estimated_alphas]},
-        cv=cv,
-        error_score=0.5,
-        n_jobs=1,
-    ).fit(x, y)
-    cv_results = pd.DataFrame(gcv.cv_results_)
-    alphas = cv_results.param_coxnetsurvivalanalysis__alphas.map(lambda x: x[0])
-    mean = cv_results.mean_test_score
-    std = cv_results.std_test_score
-    fig, ax = plt.subplots(figsize=(9, 6))
-    ax.plot(alphas, mean)
-    ax.fill_between(alphas, mean - std, mean + std, alpha=0.15)
-    ax.set_xscale("log")
-    ax.set_ylabel("concordance index")
-    ax.set_xlabel("alpha")
-    ax.axvline(gcv.best_params_["coxnetsurvivalanalysis__alphas"][0], c="C1")
-    ax.axhline(0.5, color="grey", linestyle="--")
-    plt.show()
-    best_model = gcv.best_estimator_.named_steps["coxnetsurvivalanalysis"]
-    best_coefs = pd.DataFrame(best_model.coef_, index=x.columns, columns=["coefficient"])
-    non_zero = np.sum(best_coefs.iloc[:, 0] != 0)
-    print(f"Number of non-zero coefficients: {non_zero}")
-    non_zero_coefs = best_coefs.query("coefficient != 0")
-    coef_order = non_zero_coefs.abs().sort_values("coefficient").index
-    _, ax = plt.subplots(figsize=(6, 8))
-    non_zero_coefs.loc[coef_order].plot.barh(ax=ax, legend=False)
-    ax.set_xlabel("coefficient")
-    ax.grid(True)
-    plt.show()
 def plot_coefficients(coefs, n_highlight):
     _, ax = plt.subplots(figsize=(9, 6))
     n_features = coefs.shape[0]
@@ -204,23 +151,85 @@ def plot_coefficients(coefs, n_highlight):
     ax.set_xlabel("alpha")
     ax.set_ylabel("coefficient")
     plt.show()
-def LassoCoxPH(x, y):
-    alphas = 10.0 ** np.linspace(-3, 4, 50)
-    coefficients = {}
-    cox = CoxPHSurvivalAnalysis()
-    for alpha in alphas:
-        cox.set_params(alpha=alpha)
-        cox.fit(x, y)
-        key = round(alpha, 5)
-        coefficients[key] = cox.coef_
-    coefficients_lasso = pd.DataFrame.from_dict(coefficients).rename_axis(index="feature", columns="alpha").set_index(x.columns)
-    plot_coefficients(coefficients_lasso, n_highlight=10)
-def LassoCoxNet(x,y):
+def LassoAnalysis(df):
+    print(Style.BRIGHT + "\033[4m" + "Lasso Ridge Analysis" + Style.RESET_ALL)
+    x = df.iloc[:, 1:-1]
+    y = df.iloc[:, -1]
+    x_train, x_test, y_train, y_test = train_test_split(x,y, test_size=0.3, random_state=42)
+    lasso = LassoCV(cv=10, max_iter=10000, random_state = 42)
+    lasso.fit(x_train,y_train)
+    best_alpha = lasso.alpha_
+    lasso_best = Lasso(alpha=best_alpha)
+    lasso_best.fit(x_train, y_train)
+    formula = list(zip(lasso_best.coef_,list(x.columns)))
+    print("RAD_SIGNATURE = "+Fore.CYAN+str('%.4f'%lasso_best.intercept_)+' + '+Style.RESET_ALL)
+    for el in formula:
+        if el[0] != 0.0:
+            print("                " + Fore.CYAN + str('%.4f'%el[0])+Style.RESET_ALL+' * '+Fore.YELLOW+str(el[1])+Style.RESET_ALL)
+    return formula, lasso_best.intercept_
+def LassoCoxAnalysis(x,y,plot):
+    print( Style.BRIGHT + "\033[4m" + "Lasso Cox Analysis" + Style.RESET_ALL)
+    coxnet_pipe = make_pipeline(CoxnetSurvivalAnalysis(l1_ratio=0.9, alpha_min_ratio=0.01, max_iter=10000))
+    warnings.simplefilter("ignore", UserWarning)
+    warnings.simplefilter("ignore", FitFailedWarning)
+    coxnet_pipe.fit(x, y)
+    estimated_alphas = coxnet_pipe.named_steps["coxnetsurvivalanalysis"].alphas_
+    cv = KFold(n_splits=10, shuffle=True, random_state=42, )
+    gcv = GridSearchCV(coxnet_pipe,
+        param_grid={"coxnetsurvivalanalysis__alphas": [[v] for v in estimated_alphas]},
+        cv=cv,
+        error_score=0.5,
+        n_jobs=1,
+    ).fit(x, y)
+    cv_results = pd.DataFrame(gcv.cv_results_)
+    alphas = cv_results.param_coxnetsurvivalanalysis__alphas.map(lambda x: x[0])
+    mean = cv_results.mean_test_score
+    std = cv_results.std_test_score
+    if plot:
+        fig, ax = plt.subplots(figsize=(9, 6))
+        ax.plot(alphas, mean)
+        ax.fill_between(alphas, mean - std, mean + std, alpha=0.15)
+        ax.set_xscale("log")
+        ax.set_ylabel("concordance index")
+        ax.set_xlabel("alpha")
+        ax.axvline(gcv.best_params_["coxnetsurvivalanalysis__alphas"][0], c="C1")
+        ax.axhline(0.5, color="grey", linestyle="--")
+        plt.show()
+    best_model = gcv.best_estimator_.named_steps["coxnetsurvivalanalysis"]
+    best_coefs = pd.DataFrame(best_model.coef_, index=x.columns, columns=["coefficient"])
+    non_zero = np.sum(best_coefs.iloc[:, 0] != 0)
+    print(Fore.GREEN+Style.BRIGHT+f"Number of non-zero coefficients: {non_zero}"+Style.RESET_ALL)
+    print('RAD_SIGNATURE = ')
+    for index,row in best_coefs.iterrows():
+        if row['coefficient'] != 0:
+            print(Fore.CYAN+str('%.4f'%row['coefficient'])+Style.RESET_ALL+' * '+Fore.YELLOW+str(index)+Style.RESET_ALL)
+    if plot:
+        non_zero_coefs = best_coefs.query("coefficient != 0")
+        coef_order = non_zero_coefs.abs().sort_values("coefficient").index
+        _, ax = plt.subplots(figsize=(6, 8))
+        non_zero_coefs.loc[coef_order].plot.barh(ax=ax, legend=False)
+        ax.set_xlabel("coefficient")
+        ax.grid(True)
+        plt.show()
 
-    cox_lasso = CoxnetSurvivalAnalysis(l1_ratio=1.0, alpha_min_ratio=0.05)
-    cox_lasso.fit(x, y)
-    coefficients_lasso = pd.DataFrame(cox_lasso.coef_, index=x.columns, columns=np.round(cox_lasso.alphas_, 5))
-    plot_coefficients(coefficients_lasso, n_highlight=10)
+
+# def LassoCoxPH(x, y):
+#     alphas = 10.0 ** np.linspace(-3, 4, 50)
+#     coefficients = {}
+#     cox = CoxPHSurvivalAnalysis()
+#     for alpha in alphas:
+#         cox.set_params(alpha=alpha)
+#         cox.fit(x, y)
+#         key = round(alpha, 5)
+#         coefficients[key] = cox.coef_
+#     coefficients_lasso = pd.DataFrame.from_dict(coefficients).rename_axis(index="feature", columns="alpha").set_index(x.columns)
+#     plot_coefficients(coefficients_lasso, n_highlight=10)
+# def LassoCoxNet(x,y):
+#
+#     cox_lasso = CoxnetSurvivalAnalysis(l1_ratio=1.0, alpha_min_ratio=0.05)
+#     cox_lasso.fit(x, y)
+#     coefficients_lasso = pd.DataFrame(cox_lasso.coef_, index=x.columns, columns=np.round(cox_lasso.alphas_, 5))
+#     plot_coefficients(coefficients_lasso, n_highlight=10)
 
 
 if __name__ == '__main__':
@@ -244,17 +253,15 @@ if __name__ == '__main__':
         RadFeatures[num_cols] = scaler.transform(RadFeatures[num_cols])
     ClinicalFeatures = PreprocessClinicalFeatures(r"C:\Users\marvu\Desktop\GitHub\RadTACE\file\clinical_data.csv")
     RadFeatures, ClinicalFeatures = IDMerge(RadFeatures, ClinicalFeatures)
-    # Feature selection for radiomics features with Lasso
-    LassoAnalysis(RadFeatures)
-    # Feature selection for clinical features with Lasso Using CoxPH model
+    # Feature selection for radiomics features with Lasso with Logistic Regressor
+    formula, intercept = LassoAnalysis(RadFeatures)
+    # Feature selection for radiomics features with Lasso Using CoxPH model
     t = ClinicalFeatures['TTP'].to_numpy()
     target = ClinicalFeatures['target'].to_numpy()
     target = target > 0
     y = np.array(list(zip(target, t)), dtype=[('target', target.dtype), ('T', t.dtype)])
-    x_c = ClinicalFeatures.drop(columns=['Death_1_StillAliveorLostToFU_0','target','ID','TTP','OS','Censored_0_progressed_1','Interval_BL','Interval_FU'])
-    x_r = RadFeatures.drop(columns = ['ID','target'])
-    LassoAnalysis_TD(x_r,y)
-    LassoCoxPH(x_c,y)
+    x = RadFeatures.drop(columns = ['ID','target'])
+    LassoCoxAnalysis(x,y,False)
 
     print(0)
 
