@@ -14,7 +14,6 @@ for patient_folder in os.listdir(main_dir):
             print("\t"+acquisition_folder)
             acquisition_dir = os.path.join(patient_dir, acquisition_folder)
             if os.path.isdir(acquisition_dir):
-                # Check if Segmentation.nrrd exists
                 segmentation_path = os.path.join(acquisition_dir, 'Segmentation.nrrd')
                 if os.path.exists(segmentation_path):
                     files = os.listdir(acquisition_dir)

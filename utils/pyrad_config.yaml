@@ -40,7 +40,7 @@ setting:
   # may not increase accuracy and stability of your extracted features.
   interpolator: 'sitkBSpline'
   resampledPixelSpacing: [1, 1, 1]
-  padDistance: 10  # Extra padding for large sigma valued LoG filtered images
+  padDistance: 10 # Extra padding for large sigma valued LoG filtered images
 
   # Mask validation:
   # correctMask and geometryTolerance are not needed, as both image and mask are resampled, if you expect very small
