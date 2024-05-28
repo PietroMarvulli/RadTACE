@@ -3,13 +3,6 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
-        <entry key="\file\RadFeatures.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
         <entry key="\file\RadFeatures_Lesion.csv">
           <value>
             <Attribute>
@@ -17,14 +10,14 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="\file\RadFeatures_Liver.csv">
+        <entry key="\file\clinical_data.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
             </Attribute>
           </value>
         </entry>
-        <entry key="\file\clinical_data.csv">
+        <entry key="\file\feature_0.55.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />

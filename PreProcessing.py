@@ -5,26 +5,18 @@ import pandas as pd
 import random
 from lifelines import CoxPHFitter
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LassoCV, Lasso
+from sklearn.linear_model import LassoCV, ElasticNetCV, ElasticNet
 from sklearn.model_selection import train_test_split
 from sksurv.linear_model import CoxnetSurvivalAnalysis
-import matplotlib.pyplot as plt
 import warnings
 from sklearn.model_selection import GridSearchCV, KFold
 from sklearn.exceptions import FitFailedWarning
 from sklearn.pipeline import make_pipeline
-from scipy.special import softmax
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
-
-def File_Exist(filename):
-    for folder_name, _, file_list in os.walk(r'.\file'):
-        if filename in file_list:
-            print(Back.GREEN + f"File '{filename}' found in folder: {folder_name}"+Style.RESET_ALL)
-            return True
-        else:
-            print(f"File '{filename}' not found in the project.")
-            return False
-def PreprocessRadFeatures(radPath,clinicalPath):
+def PreprocessRadFeatures(radPath,clinicalPath, thrs):
     rad_features = pd.read_csv(radPath)
     cols_to_drop = [col for col in rad_features.columns if 'diagnostic' in col]
     cols_to_drop.append("Mask")
@@ -38,7 +30,7 @@ def PreprocessRadFeatures(radPath,clinicalPath):
 
     mat = rad_features.drop(columns='target').corr(method='spearman')
 
-    cutoff_corr = 0.75
+    cutoff_corr = thrs
     high_correlation_pairs = []
     for i in range(len(mat.columns)):
         for j in range(i + 1, len(mat.columns)):
@@ -60,7 +52,7 @@ def PreprocessRadFeatures(radPath,clinicalPath):
     rad_features = rad_features.dropna(axis=0)
     print('Finished Preprocess of ', radPath)
     return rad_features
-def PreprocessClinicalFeatures(csvPath):
+def PreprocessClinicalFeatures(csvPath, thrs):
     clinical_features = pd.read_csv(csvPath)
     clinical_features['target'] = (clinical_features['TTP'] > 14).astype(float)
     clinical_features = clinical_features.drop(columns=['age','AFP'])
@@ -75,7 +67,7 @@ def PreprocessClinicalFeatures(csvPath):
     ID = clinical_features['TCIA_ID']
     clinical_features = clinical_features.drop(columns=['TCIA_ID'])
     corr = clinical_features.drop(columns=['TTP','target']).corr(method='spearman')
-    cutoff_corr = 0.75
+    cutoff_corr = thrs
     high_correlation_pairs = []
     for i in range(len(corr.columns)):
         for j in range(i + 1, len(corr.columns)):
@@ -90,13 +82,7 @@ def PreprocessClinicalFeatures(csvPath):
             drop_list.append(row[1][0])
     drop_list = set(drop_list)
     clinical_features = clinical_features.drop(columns=drop_list)
-    cph = CoxPHFitter()
-    for feature in clinical_features:
-        if (feature != 'TTP') & (feature != 'target'):
-            cph.fit(clinical_features,'TTP','target',formula=feature)
-            # cph.print_summary()
     clinical_features['ID'] = ID.values
-    clinical_features = clinical_features.rename(columns = {'target':'target_lesion'})
     return clinical_features
 def EncodeDF(df):
     elab_features = []
@@ -162,14 +148,15 @@ def LassoAnalysis(df,y=None):
         y = df.iloc[:, -1]
     print(Style.BRIGHT + "\033[4m" + "Lasso Logistic Regression Analysis" + Style.RESET_ALL)
     x = df.iloc[:, 1:-1]
-    model_lasso = LassoCV(alphas=np.linspace(2,0,50), cv=10, max_iter=100000, random_state=0).fit(x, y)
+    model_lasso = LassoCV(alphas=np.linspace(1,0,50), cv=10, max_iter=100000, random_state=0).fit(x, y)
     coef = pd.Series(model_lasso.coef_, index=x.columns)
     coef_pd = pd.DataFrame({"coef" : coef})
-    print("Lasso picked " + str(sum(coef != 0)) + " variables and eliminated the other " + str(sum(coef == 0)) + " variables")
+    non_zero = np.sum(coef_pd.iloc[:, 0] != 0)
+    print(Fore.GREEN+Style.BRIGHT+f"Number of non-zero coefficients: {non_zero}"+Style.RESET_ALL)
     for el in coef_pd.iterrows():
-        if el[1][0]>0:
+        if abs(el[1][0])>0:
             print(Fore.CYAN+str('%.4f' % el[1][0])+ Style.RESET_ALL + ' * ' + Fore.YELLOW + str(el[0])+ Style.RESET_ALL)
-    print(Style.BRIGHT +"Score of The Lasso Model is "+"\033[4m" +str('%.4f' % model_lasso.score(x,y))+Style.RESET_ALL)
+    # print(Style.BRIGHT +"Score of The Lasso Model is "+"\033[4m" +str('%.4f' % model_lasso.score(x,y))+Style.RESET_ALL)
     return coef_pd
 def LassoCoxAnalysis(x,y,plot):
     print( Style.BRIGHT + "\033[4m" + "Lasso CoxPH Model Analysis" + Style.RESET_ALL)
@@ -178,7 +165,7 @@ def LassoCoxAnalysis(x,y,plot):
     warnings.simplefilter("ignore", FitFailedWarning)
     coxnet_pipe.fit(x, y)
     estimated_alphas = coxnet_pipe.named_steps["coxnetsurvivalanalysis"].alphas_
-    cv = KFold(n_splits=10, shuffle=True, random_state=42)
+    cv = KFold(n_splits=5, shuffle=True, random_state=0)
     gcv = GridSearchCV(coxnet_pipe,
         param_grid={"coxnetsurvivalanalysis__alphas": [[v] for v in estimated_alphas]},
         cv=cv,
@@ -203,7 +190,6 @@ def LassoCoxAnalysis(x,y,plot):
     best_coefs = pd.DataFrame(best_model.coef_, index=x.columns, columns=["coefficient"])
     non_zero = np.sum(best_coefs.iloc[:, 0] != 0)
     print(Fore.GREEN+Style.BRIGHT+f"Number of non-zero coefficients: {non_zero}"+Style.RESET_ALL)
-    print('RAD_SIGNATURE: ')
     formula = list()
     for index,row in best_coefs.iterrows():
         if row['coefficient'] != 0:
@@ -218,42 +204,135 @@ def LassoCoxAnalysis(x,y,plot):
         ax.set_xlabel("coefficient")
         ax.grid(True)
         plt.show()
+    features = []
+    coef = []
+    for el in formula:
+        coef.append(el[0])
+        features.append(el[1])
+    formula = pd.DataFrame({'feature':features,'coef':coef})
     return formula
+def ElasticNetAnalysis(x,y):
+    print( Style.BRIGHT + "\033[4m" + "Elastic Net Analysis" + Style.RESET_ALL)
+    elastic_net = ElasticNetCV(cv=10, random_state=0)
+    elastic_net.fit(x, y)
+    optimal_alpha = elastic_net.alpha_
+    optimal_l1_ratio = elastic_net.l1_ratio_
+    elastic_net_optimal = ElasticNet(alpha=optimal_alpha, l1_ratio=optimal_l1_ratio)
+    elastic_net_optimal.fit(x, y)
+    coefficients = pd.DataFrame({'feature':elastic_net_optimal.feature_names_in_,'coefficient': elastic_net_optimal.coef_})
+    non_zero = np.sum(abs(coefficients.iloc[:, 1]) > 0)
+    print(Fore.GREEN + Style.BRIGHT + f"Number of non-zero coefficients: {non_zero}" + Style.RESET_ALL)
+    for index, row in coefficients.iterrows():
+        if row['coefficient'] != 0:
+            print(Fore.CYAN + str('%.4f' % row['coefficient'] + Style.RESET_ALL + ' * ' + Fore.YELLOW + row['feature'] + Style.RESET_ALL))
+    return coefficients
+def UnivariateAnalysis(df):
+    cph = CoxPHFitter()
+    df = df.drop(columns=['ID'])
+    covariates = [col for col in df.columns if col not in ['TTP','target']]
+    results = pd.DataFrame()
+    for feature in covariates:
+        cph.fit(df[[feature,'TTP','target']], duration_col='TTP', event_col='target')
+        summary = cph.summary.transpose()
+        results[feature] = summary
+    return results
+def MultivariateAnalysis(df):
+    cph = CoxPHFitter()
+    df = df.drop(columns=['ID'])
+    cph.fit(df, duration_col='TTP', event_col='target')
+    summary = cph.summary.transpose()
+    return summary
+def PrintRevelantFeatures(df,thr):
+    if thr == 0.05:
+        method = Style.BRIGHT+'Univariate'+Style.RESET_ALL
+    else:
+        method = Style.BRIGHT+'Multivariate'+Style.RESET_ALL
+    if 'p' in df.index:
+        ss_features = df.columns[df.loc['p']<thr]
+        print('Feature selezionate con analisi '+method+':')
+        for col in ss_features:
+            print('\t'+col)
+def Tsne2D(df):
+    warnings.simplefilter("ignore", FutureWarning)
+    if 'ID' in df.columns:
+        df = df.drop(columns=['ID'])
+    features = df.iloc[:, :-1].values
+    labels = df.iloc[:, -1].values
+    tsne_2d = TSNE(n_components=2, random_state=0)
+    tsne_2d_results = tsne_2d.fit_transform(features)
 
+    plt.figure(figsize=(10, 6))
+    scatter = plt.scatter(tsne_2d_results[:, 0], tsne_2d_results[:, 1], c=labels, cmap='viridis', s=50, alpha=0.7)
+    plt.colorbar(scatter)
+    plt.title('t-SNE 2D')
+    plt.xlabel('t-SNE component 1')
+    plt.ylabel('t-SNE component 2')
+    plt.show()
+def Tsne3D(df):
+    warnings.simplefilter("ignore", FutureWarning)
+    if 'ID' in df.columns:
+        df = df.drop(columns=['ID'])
+    features = df.iloc[:, :-1].values
+    labels = df.iloc[:, -1].values
+    tsne_3d = TSNE(n_components=3, random_state=0)
+    tsne_3d_results = tsne_3d.fit_transform(features)
+
+    fig = plt.figure(figsize=(10, 6))
+    ax = fig.add_subplot(111, projection='3d')
+    scatter = ax.scatter(tsne_3d_results[:, 0], tsne_3d_results[:, 1], tsne_3d_results[:, 2], c=labels, cmap='viridis', s=50, alpha=0.7)
+    plt.colorbar(scatter)
+    ax.set_title('t-SNE 3D')
+    ax.set_xlabel('t-SNE component 1')
+    ax.set_ylabel('t-SNE component 2')
+    ax.set_zlabel('t-SNE component 3')
+    plt.show()
 
 if __name__ == '__main__':
-    file_csv = "LesionFeatures.csv"
-    if not File_Exist(file_csv):
-        LesionRadPath = r"C:\Users\marvu\Desktop\GitHub\RadTACE\file\RadFeatures_Lesion.csv"
-        ClinicalPath = r"C:\Users\marvu\Desktop\GitHub\RadTACE\file\clinical_data.csv"
-        LesionRadFeatures = PreprocessRadFeatures(LesionRadPath,ClinicalPath)
-        LesionRadFeatures = LesionRadFeatures.rename(columns=lambda x: str(x) + '_lesion')
-        dest_path = "C:\\Users\\marvu\\Desktop\\GitHub\\RadTACE\\file\\" + file_csv
-        LesionRadFeatures.to_csv(dest_path)
+    read = False
+    if read:
+        radiomics_csv = "RadFeatures_Lesion.csv"
+        clinical_csv = "clinical_data.csv"
+        full_path = "C:\\Users\\marvu\\Desktop\\GitHub\\RadTACE\\file\\" + radiomics_csv
+        clinical_path = "C:\\Users\\marvu\\Desktop\\GitHub\\RadTACE\\file\\" + clinical_csv
+        RadFeatures = pd.read_csv(full_path)
+        RadFeatures = PreprocessRadFeatures(full_path,clinical_path, 0.55)
+        clinical_path = r"C:\Users\marvu\Desktop\GitHub\RadTACE\file\clinical_data.csv"
+
     else:
-        dest_path = "C:\\Users\\marvu\\Desktop\\GitHub\\RadTACE\\file\\" + file_csv
-        RadFeatures = pd.read_csv(dest_path)
+        clinical_path = r"C:\Users\marvu\Desktop\GitHub\RadTACE\file\clinical_data.csv"
+        RadFeatures = pd.read_csv(r"C:\Users\marvu\Desktop\GitHub\RadTACE\file\feature_0.55.csv")
+        RadFeatures = RadFeatures.rename(columns = {"Unnamed: 0":"ID"})
         _ , num_cols = class_features(RadFeatures)
         num_cols = num_cols[1:]
         scaler = StandardScaler().fit(RadFeatures[num_cols])
         RadFeatures[num_cols] = scaler.transform(RadFeatures[num_cols])
-        RadFeatures = RadFeatures.rename(columns={'Unnamed: 0':'ID'})
-    ClinicalFeatures = PreprocessClinicalFeatures(r"C:\Users\marvu\Desktop\GitHub\RadTACE\file\clinical_data.csv")
-    RadFeatures, ClinicalFeatures = IDMerge(RadFeatures, ClinicalFeatures)
-
-    # Feature selection for radiomics features with Lasso with Logistic Regressor
-    # TTP = ClinicalFeatures['TTP']
-    # RadFeatures['TTP'] = TTP
+        ClinicalFeatures = PreprocessClinicalFeatures(clinical_path, 0.7)
+        RadFeatures, ClinicalFeatures = IDMerge(RadFeatures, ClinicalFeatures)
+    #
+    # # Feature selection for radiomics features with Lasso with Logistic Regressor
+    # # TTP = ClinicalFeatures['TTP']
+    # # RadFeatures['TTP'] = TTP
     y = ClinicalFeatures['TTP']
-    coef = LassoAnalysis(RadFeatures,y)
-
-    # Feature selection for radiomics features with Lasso Using CoxPH model
-
+    lasso = LassoAnalysis(RadFeatures,y)
+    #
+    # # Feature selection for radiomics features with Lasso Using CoxPH model
     t = ClinicalFeatures['TTP'].to_numpy()
-    target = ClinicalFeatures['Censored_0_progressed_1'].to_numpy()
+    target = ClinicalFeatures['target'].to_numpy()
     target = target > 0
     y = np.array(list(zip(target, t)), dtype=[('target', target.dtype), ('T', t.dtype)])
-    x = RadFeatures.drop(columns = ['ID','target_lesion'])
-    formula_cox = LassoCoxAnalysis(x,y,True)
+    x = RadFeatures.drop(columns = ['ID','target'])
+    lassocox = LassoCoxAnalysis(x,y,False)
+
+    # # Feature selection for radiomics features with Elastic Net (have Lasso component and Ridge component)
+    x = RadFeatures.drop(columns=['ID', 'target'])
+    y = ClinicalFeatures['TTP']
+    elasticnet = ElasticNetAnalysis(x,y)
+
+    lasso_features = RadFeatures[lasso.index]
+    lassocox_features = RadFeatures[lassocox['feature']]
+    elasticnet_feature = RadFeatures[elasticnet['feature']]
+
+
     a = 0
+
 
