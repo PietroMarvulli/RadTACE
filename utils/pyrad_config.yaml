@@ -12,6 +12,10 @@ imageType:
   LoG:
     sigma: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]  # If you include sigma values >5, remember to also increase the padDistance.
   Wavelet: {}
+  Square: {}
+  SquareRoot: {}
+  Logarithm: {}
+  Exponential: {}
 
 featureClass:
   # redundant Compactness 1, Compactness 2 a Spherical Disproportion features are disabled by default, they can be
@@ -20,6 +24,28 @@ featureClass:
 
   firstorder:
   glcm:  # Disable SumAverage by specifying all other GLCM features available
+    - 'Autocorrelation'
+    - 'JointAverage'
+    - 'ClusterProminence'
+    - 'ClusterShade'
+    - 'ClusterTendency'
+    - 'Contrast'
+    - 'Correlation'
+    - 'DifferenceAverage'
+    - 'DifferenceEntropy'
+    - 'DifferenceVariance'
+    - 'JointEnergy'
+    - 'JointEntropy'
+    - 'Imc1'
+    - 'Imc2'
+    - 'Idm'
+    - 'Idmn'
+    - 'Id'
+    - 'Idn'
+    - 'InverseVariance'
+    - 'MaximumProbability'
+    - 'SumEntropy'
+    - 'SumSquares'
   glrlm:
   glszm:
   gldm:
@@ -47,13 +73,13 @@ setting:
   # masks, consider to enable a size constraint by uncommenting settings below:
   #minimumROIDimensions: 2
   #minimumROISize: 50
-  correctMask: True
+  #correctMask: True
 
   # 2D settings
   # force2Ddimension setting is relative to the acquisition plane.
   # For example, the axial plane (0) corresponds to the acquisition plane (axial, sagittal or coronal) of the MRI volume.
   # Therefore, in most cases this setting should not be modified.
-  # force2D: true
+  force2D: true
   # force2Ddimension: 0
 
   # Image discretization:

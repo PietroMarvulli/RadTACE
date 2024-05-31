@@ -17,7 +17,14 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="\file\feature_0.55.csv">
+        <entry key="\file\image-mask.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value=":" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\file\radiomics_features.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
