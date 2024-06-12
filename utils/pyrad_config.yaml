@@ -10,12 +10,15 @@
 imageType:
   Original: {}
   LoG:
-    sigma: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]  # If you include sigma values >5, remember to also increase the padDistance.
+    sigma: [ 1.0,  2.0,  3.0,  4.0, 5.0]  # If you include sigma values >5, remember to also increase the padDistance.
   Wavelet: {}
   Square: {}
   SquareRoot: {}
   Logarithm: {}
   Exponential: {}
+  Gradient : {}
+  LBP3D : {}
+
 
 featureClass:
   # redundant Compactness 1, Compactness 2 a Spherical Disproportion features are disabled by default, they can be
@@ -56,7 +59,7 @@ setting:
   # most likely not needed, CT gray values reflect absolute world values (HU) and should be comparable between scanners.
   # If analyzing using different scanners / vendors, check if the extracted features are correlated to the scanner used.
   # If so, consider enabling normalization by uncommenting settings below:
-  #normalize: true
+  # normalize: true
   #normalizeScale: 500  # This allows you to use more or less the same bin width.
 
   # Resampling:
@@ -79,17 +82,17 @@ setting:
   # force2Ddimension setting is relative to the acquisition plane.
   # For example, the axial plane (0) corresponds to the acquisition plane (axial, sagittal or coronal) of the MRI volume.
   # Therefore, in most cases this setting should not be modified.
-  force2D: true
-  # force2Ddimension: 0
+  # force2D: true
+  #force2Ddimension: 0
 
   # Image discretization:
   # The ideal number of bins is somewhere in the order of 16-128 bins. A possible way to define a good binwidt is to
   # extract firstorder:Range from the dataset to analyze, and choose a binwidth so, that range/binwidth remains approximately
   # in this range of bins.
-  binWidth: 25
+  binWidth: 18
 
   # first order specific settings:
-  voxelArrayShift: 1250  # Minimum value in HU is -1250, shift +1250 to prevent negative values from being squared.
+  voxelArrayShift: 926  # Minimum value in HU is -1250, shift +1250 to prevent negative values from being squared.
 
   # Misc:
   # default label value. Labels can also be defined in the call to featureextractor.execute, as a commandline argument,
