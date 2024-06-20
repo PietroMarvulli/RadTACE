@@ -1,2 +1,0 @@
-pyradiomics==3.0.*
-SimpleITK==2.1.*

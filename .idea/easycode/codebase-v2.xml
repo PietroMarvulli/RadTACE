@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="com.obiscr.chatgpt.settings.EasyCodeState">
+    <option name="projectFiles" value="$PROJECT_DIR$/utils/AcquisitionControl.py;C:/Users/marvu/Desktop/GitHub/RadTACE/utils/CreateCSV.py;C:/Users/marvu/Desktop/GitHub/RadTACE/utils/Dicom2NIfTI.py;C:/Users/marvu/Desktop/GitHub/RadTACE/utils/pyrad_config.yaml;C:/Users/marvu/Desktop/GitHub/RadTACE/main.py;C:/Users/marvu/Desktop/GitHub/RadTACE/PreProcessing.py;C:/Users/marvu/Desktop/GitHub/RadTACE/README.md;C:/Users/marvu/Desktop/GitHub/RadTACE/ua&amp;ma.R" />
+  </component>
+</project>
