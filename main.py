@@ -2,7 +2,6 @@ import os
 from colorama import Fore, Back, Style
 import numpy as np
 import pandas as pd
-import random
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import Lasso, LassoCV, ElasticNetCV, ElasticNet, LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -308,23 +307,32 @@ if __name__ == '__main__':
     seed = 1969
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category= ConvergenceWarning)
-
+    type = "liver"
     thr = 0.85
     thr_s = f"{int(thr * 100):03d}"
-    file = "AUC_feature_"+thr_s+".csv"
+    if type == "liver":
+        file = "AUC_feature_liver_"+thr_s+".csv"
+    else:
+        file = "AUC_feature_" + thr_s + ".csv"
     clinical_path = "C:\\Users\\marvu\\Desktop\\GitHub\\RadTACE\\file\\clinical_data.csv"
     if file not in os.listdir("C:\\Users\\marvu\\Desktop\\GitHub\\RadTACE\\file\\reducted\\"):
-        radiomics_csv = "radiomics_features.csv"
+        if type == "liver":
+            radiomics_csv = "radiomics_features_liver.csv"
+        else:
+            radiomics_csv = "radiomics_features.csv"
         print('Preprocessing of file ',radiomics_csv)
         full_path = "C:\\Users\\marvu\\Desktop\\GitHub\\RadTACE\\file\\" + radiomics_csv
         RadFeatures = pd.read_csv(full_path)
         RadFeatures = PreprocessRadFeatures(full_path,clinical_path, thr)
-        RadFeatures.to_csv("C:\\Users\\marvu\\Desktop\\GitHub\\RadTACE\\file\\reducted\\feature_"+thr_s+".csv")
+        RadFeatures.to_csv("C:\\Users\\marvu\\Desktop\\GitHub\\RadTACE\\file\\reducted\\AUC_feature_liver"+thr_s+".csv")
         RadFeatures = RadFeatures.reset_index()
         RadFeatures = RadFeatures.rename(columns={"index": "ID"})
     else:
         print("Read file ",file)
-        RadFeatures = pd.read_csv("C:\\Users\\marvu\\Desktop\\GitHub\\RadTACE\\file\\reducted\\feature_"+thr_s+".csv")
+        if type == "liver":
+            RadFeatures = pd.read_csv("C:\\Users\\marvu\\Desktop\\GitHub\\RadTACE\\file\\reducted\\AUC_feature_liver_"+thr_s+".csv")
+        else:
+            RadFeatures = pd.read_csv("C:\\Users\\marvu\\Desktop\\GitHub\\RadTACE\\file\\reducted\\AUC_feature_"+thr_s+".csv")
         RadFeatures = RadFeatures.rename(columns={"Unnamed: 0": "ID"})
 
     _ , num_cols = class_features(RadFeatures)
@@ -348,10 +356,7 @@ if __name__ == '__main__':
     x_train,x_test,y_train,y_test = train_test_split(features,target,test_size=0.2,random_state=seed)
 
 
-    ## Computing LASSO methods and Calculate Radiomics Score with 10f cv
-    # and calculate a Rad_Score for every patient
-    # lasso2 = LassoAnalysis(x_train, y_train)
-    # Find the best threshold
+
     data_score=RadScore(x_train,y_train,lasso1)
     data_train = data_score[['target','rad_score']]
     data_train_sort = data_train.sort_values(by = 'rad_score')

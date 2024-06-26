@@ -24,6 +24,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\file\radiomics_features_liver.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\file\reducted\AUC_feature_085.csv">
           <value>
             <Attribute>
@@ -35,6 +42,13 @@
           <value>
             <Attribute>
               <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\utils\image-mask.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value=":" />
             </Attribute>
           </value>
         </entry>

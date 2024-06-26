@@ -1,5 +1,4 @@
 Image,Mask
-D:\dataset_TACE_NIfTI\HCC-TACE-Seg\HCC_001\CT-CAP_WWO_CON_(30_11_1999)\3_C-A-P_acquisitionNumber_2.nii.gz,D:\dataset_TACE_NIfTI\HCC-TACE-Seg\HCC_001\CT-CAP_WWO_CON_(30_11_1999)\Segmentation.nrrd
 D:\dataset_TACE_NIfTI\HCC-TACE-Seg\HCC_002\ABDPELVIS_(26_09_1997)\4_Recon_2_LIVER_3_PHASE_(AP)_acquisitionNumber_2_1.nii.gz,D:\dataset_TACE_NIfTI\HCC-TACE-Seg\HCC_002\ABDPELVIS_(26_09_1997)\Segmentation.nrrd
 D:\dataset_TACE_NIfTI\HCC-TACE-Seg\HCC_003\AP_LIVER_(12_09_1997)\4_Recon_2_LIVER_3_PHASE_(AP)_acquisitionNumber_2.nii.gz,D:\dataset_TACE_NIfTI\HCC-TACE-Seg\HCC_003\AP_LIVER_(12_09_1997)\Segmentation.nrrd
 D:\dataset_TACE_NIfTI\HCC-TACE-Seg\HCC_004\LIVERPELVIS_(06_10_1997)\5_Recon_3_LIVER_3_PHASE_(AP)_1.nii.gz,D:\dataset_TACE_NIfTI\HCC-TACE-Seg\HCC_004\LIVERPELVIS_(06_10_1997)\Segmentation.nrrd
