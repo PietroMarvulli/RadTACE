@@ -1,2 +1,2 @@
 # RadTACE
-Extract Radiomics features from CT in pateints with HCC underwent TACE treatments
+Predict the response to TACE treatment from CT in pateints with HCC through clinical,radiomics and deep features. 
