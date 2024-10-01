@@ -6,23 +6,12 @@ import matplotlib.pyplot as plt
 from torchvision import transforms, models
 import torchvision.models as models
 
-print("PyTorch version:", torch.__version__)
-print("CUDA available:", torch.cuda.is_available())
-print("CUDA version:", torch.version.cuda)
-print("cuDNN version:", torch.backends.cudnn.version())
-print("Number of GPUs:", torch.cuda.device_count())
-print("Device Name:", torch.cuda.get_device_name(0))
 
-# list_of_models = models
-# resnet = models.resnet50(pretrained = True,progress = True)
-# resnet = torch.nn.Sequential(*list(resnet.children())[:-1])
-# print(resnet.eval())
-# print(0)
-with open('../ID.txt', 'r') as control:
+with open('ID.txt', 'r') as control:
     control = [line.rstrip() for line in control.readlines()]
 
 table = pd.read_csv("image-mask.csv")
-outfile = open('../slices.txt', 'w')
+outfile = open('slices.txt', 'w')
 for index,row in table.iterrows():
     image = table.loc[index][0][35:42]
     if image in control:

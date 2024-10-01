@@ -3,9 +3,9 @@ import shutil
 import pandas as pd
 from tqdm import tqdm
 
-excel_file = 'crossval_groups.xlsx'
-images_dir = 'D:\\images'
-output_dir = 'D:\\dataset_5f'
+excel_file = '../crossval_groups.xlsx'
+images_dir = 'D:\\patched\\images'
+output_dir = 'D:\\dataset_5f_patched'
 
 
 df = pd.read_excel(excel_file)
